@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: raftstarter-headless
+  labels:
+    run: raftstarter
+spec:
+  ports:
+    - port: 11000
+      name: rest
+    - port: 12000
+      name: raft
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    run: raftstarter
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: raftstarter-leader-election
+  labels:
+    run: raftstarter-leader-election
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: raftstarter-leader-election
+  labels:
+    run: raftstarter-leader-election
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["*"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "patch"]
+    resourceNames: ["raftstarter-0", "raftstarter-1", "raftstarter-2"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: raftstarter-leader-election
+  labels:
+    run: raftstarter-leader-election
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: raftstarter-leader-election
+subjects:
+  - name: raftstarter-leader-election
+    kind: ServiceAccount
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: raftstarter
+  labels:
+    run: raftstarter
+spec:
+  type: ClusterIP
+  ports:
+    - port: 11000
+      name: rest
+  selector:
+    run: raftstarter
+    raft-state: Leader
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: raftstarter
+spec:
+  serviceName: raftstarter-headless
+  replicas: 3
+  selector:
+    matchLabels:
+      run: raftstarter
+  template:
+    metadata:
+      labels:
+        run: raftstarter
+    spec:
+      serviceAccountName: raftstarter-leader-election
+      containers:
+      - name: raftstarter
+        image: raftstarter:latest
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: PEERS
+            value: raftstarter-0@raftstarter-0.raftstarter-headless:12000,raftstarter-1@raftstarter-1.raftstarter-headless:12000,raftstarter-2@raftstarter-2.raftstarter-headless:12000
+          - name: STATE_DIR
+            value: /state
+        volumeMounts:
+        - name: state
+          mountPath: /state
+  volumeClaimTemplates:
+  - metadata:
+      name: state
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

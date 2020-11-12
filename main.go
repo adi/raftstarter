@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/adi/raftstarter/httpd"
+	"github.com/adi/raftstarter/kube"
 	"github.com/adi/raftstarter/store"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/raft"
@@ -19,7 +20,7 @@ var logger hclog.Logger
 
 func init() {
 	logger = hclog.New(&hclog.LoggerOptions{
-		Name:  "integrations",
+		Name:  "raftstarter",
 		Level: hclog.Debug,
 	})
 }
@@ -104,18 +105,47 @@ func main() {
 		log.Panicf("failed to start HTTP service: %v", err)
 	}
 
-	// Start observing raft state changes
-	go func() {
-		ch := s.ObservationCh()
-		for {
-			select {
-			case o := <-ch:
-				if raftState, ok := o.Data.(raft.RaftState); ok {
-					logger.Info("new raft state", "raftState", raftState.String())
+	if kube.RunningInKube() {
+		// Set initial state in Kubernetes
+		err = kube.SetSelfRaftState("Follower", logger)
+		if err != nil {
+			logger.Error("failed to set self raft status", "err", err)
+			panic(err.Error())
+		}
+		if err != nil {
+			logger.Error("failed to set self raft status", "err", err)
+			panic(err.Error())
+		}
+		// Start leader syncer
+		go func() {
+			ch := s.ObservationCh()
+			for {
+				select {
+				case o := <-ch:
+					if raftState, ok := o.Data.(raft.RaftState); ok {
+						err := kube.SetSelfRaftState(raftState.String(), logger)
+						if err != nil {
+							logger.Error("failed to set self raft status", "err", err)
+							panic(err.Error())
+						}
+					}
 				}
 			}
-		}
-	}()
+		}()
+	} else {
+		// Start observing raft state changes
+		go func() {
+			ch := s.ObservationCh()
+			for {
+				select {
+				case o := <-ch:
+					if raftState, ok := o.Data.(raft.RaftState); ok {
+						logger.Info("new raft state", "raftState", raftState.String())
+					}
+				}
+			}
+		}()
+	}
 
 	logger.Info("completed initialization")
 

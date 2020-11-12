@@ -1,0 +1,8 @@
+vendor
+state
+tmp
+.git
+.gitignore
+Procfile
+kube-deploy.yaml
+kube-inmem-deploy.yaml

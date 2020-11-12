@@ -34,6 +34,11 @@ It is intentionally minimalistic and it was based on the example found at https:
 - Added Procfile for easier debug using [goreman](https://github.com/mattn/goreman)
   - It is meant to be run like this:  
     `go build -o ./tmp/app && goreman start`
+- Added example of how to run it in Kubernetes:  
+    `./_scripts/build.sh`  
+    `./_scripts/install.sh`  
+  and when you're done with it:  
+    `./_scripts/build.sh`  
 
 Have fun and make as many of your services highly available 🖖  
-Adrian Punga <adrian.punga@gmail.com>
+Adrian Punga
