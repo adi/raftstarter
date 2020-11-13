@@ -31,14 +31,13 @@ It is intentionally minimalistic and it was based on the example found at https:
 - Added correct signal support
 - Used the [Hashicorp logger](https://github.com/hashicorp/go-hclog)
 - Added API to the Store and an example of how to detect Raft state changes
-- Added Procfile for easier debug using [goreman](https://github.com/mattn/goreman)
-  - It is meant to be run like this:  
-    `go build -o ./tmp/app && goreman start`
+- Added Procfile for easier debug using [goreman](https://github.com/mattn/goreman) which is meant to be run like this:  
+        `go build -o ./tmp/app && goreman start`
 - Added example of how to run it in Kubernetes:  
-    `./_scripts/build.sh`  
-    `./_scripts/install.sh`  
+        `./_scripts/build.sh`  
+        `./_scripts/install.sh`  
   and when you're done with it:  
-    `./_scripts/build.sh`  
+        `./_scripts/uninstall.sh`  
 
 Have fun and make as many of your services highly available 🖖  
 Adrian Punga
