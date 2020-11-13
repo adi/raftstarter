@@ -15,7 +15,7 @@ It is intentionally minimalistic and it was based on the example found at https:
   - `HTTP_PORT` defaults to `11000`
   - `RAFT_ADDR` defaults to `0.0.0.0`
   - `RAFT_PORT` defaults to `12000`
-  - `RAFT_ADVERTISE_ADDR` defaults to the IPV4 which is obtain from resolving the system hostname (also handy when ran in Kubernetes)
+  - `RAFT_ADVERTISE_ADDR` defaults to the IPV4 which is obtained from resolving the system hostname (also handy when ran in Kubernetes)
   - `RAFT_ADVERTISE_PORT` defaults be the same as `RAFT_PORT`
   - `PEERS` of the form `node1@10.1.1.1:12000,node2@10.1.1.2:12000,...` defaults to be `<NODE_ID>@<RAFT_ADVERTISE_ADDR>:<RAFT_ADVERTISE_PORT>` which sets up a one node cluster
 - All these defaults mean that you can run a single node without any environment or argument configuration
